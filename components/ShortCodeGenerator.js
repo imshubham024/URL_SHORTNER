@@ -13,5 +13,5 @@ const createShortCodeGenerator = (length=7) => {
 
   return { generate };
 };
-
+const name =1;
 module.exports = createShortCodeGenerator;
