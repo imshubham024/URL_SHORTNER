@@ -24,12 +24,12 @@ const shortenUrl = async (orignalUrl, expirationDays = null) => {
   let existing = await Url.findOne({ shortCode: shortCode });
   let attempts = 0;
   while (existing && attempts < 10) {
-    shortcode = generate(orignalUrl);
+    shortCode = generate(orignalUrl);
     existing = await Url.findOne({ shortCode: shortCode });
     attempts++;
   }
   if (attempts >= 10) {
-    throw new Error("Uneable To Generate The Url PLease Us Sometime Later");
+    throw new Error("Could not generate unique short code");
   }
 
   //Creating The New Url Oject In The DB
@@ -43,13 +43,13 @@ const getUrl = async (shortCode) => {
   //finding the orignal Url in DB based on provided short Url
   const orgUrl = await Url.findOne({ shortCode });
   if (!orgUrl) {
-    throw new Error("Url For The Provided Shorten URl  Not Found !");
+    throw new Error("URL not found");
   }
   //checking whther the Url has been expired or not
   if (orgUrl.expiresAt && orgUrl.expiresAt < new Date()) {
     //deleting if Url expired
     await Url.deleteOne({ _id: orgUrl._id });
-    throw new Error("Url Has Been Expired");
+    throw new Error("URL has expired");
   }
   return orgUrl;
 };
@@ -59,6 +59,7 @@ const redirectUrl = async (shortCode) => {
   // increment the count clicks
   orgUrl.clicks++;
   await orgUrl.save();
+  return orgUrl.orignalUrl;
 };
 
 //all the details of the url
