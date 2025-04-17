@@ -1,17 +1,12 @@
-const createShortCodeGenerator = (length=7) => {
+const generate = () => {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  const generate = () => {
-    let shortCode = "";
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      shortCode += characters[randomIndex];
-    }
-    return shortCode;
-  };
-
-  return { generate };
+  let shortCode = "";
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    shortCode += characters[randomIndex];
+  }
+  return shortCode;
 };
-const name =1;
-module.exports = createShortCodeGenerator;
+
+module.exports = generate;

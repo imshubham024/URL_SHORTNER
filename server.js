@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// connecting to the mongoose 
+// connecting to the mongoose
 
 mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/urlshortner", {
@@ -32,7 +32,6 @@ mongoose
 
 //LISTENING TO PORT
 
-app,
-  listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
