@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
+const urlRoutes = require("./routes/urlRoutes.js");
 
 // environment variables
 dotenv.config();
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/", urlRoutes);
 
 // connecting to the mongoose
 

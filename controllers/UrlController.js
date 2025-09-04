@@ -7,18 +7,19 @@ const {
   cleanUpExpiredUrl,
 } = require("../services/urlServices.js");
 
-const ShoterUrl = async (req, res) => {
+// Shorten a new URL
+const shortenUrlController = async (req, res) => {
   try {
     const { url, expirationDays } = req.body;
-    const newUrl = await ShoterUrl(url, expirationDays);
-    const shortUrl = `${req.protocol}://${req.get("host")}/${newUrl.ShoterUrl}`;
+    const newUrl = await shortenUrl(url, expirationDays);
+    const shortUrl = `${req.protocol}://${req.get("host")}/${newUrl.shortCode}`;
     res.status(201).json({
       success: true,
       data: {
-        orignalUrl: newUrl.orignalUrl,
+        originalUrl: newUrl.orignalUrl,
         shortUrl,
-        shortcode: newUrl.shortUrl,
-        expireAt: newUrl.expireAt,
+        shortCode: newUrl.shortCode,
+        expireAt: newUrl.expiresAt,
       },
     });
   } catch (err) {
@@ -29,30 +30,51 @@ const ShoterUrl = async (req, res) => {
   }
 };
 
-// redirect to orignal url
-const redirectToUrl = async (req, res) => {
+// Get original URL by short code
+const getUrlController = async (req, res) => {
   try {
     const { shortCode } = req.params;
-    const orignalUrl = await redirectUrl(shortCode);
-    res.redirect(orignalUrl);
+    const url = await getUrl(shortCode);
+    res.status(200).json({
+      success: true,
+      data: {
+        shortCode: url.shortCode,
+        originalUrl: url.orignalUrl,
+        createdAt: url.createdAt,
+        clicks: url.clicks,
+        expireAt: url.expiresAt,
+      },
+    });
   } catch (err) {
-    res
-      .status(
-        err.message === "Url Not Found"
-          ? 404
-          : err.message === "Url has expired"
-          ? 401
-          : 500
-      )
-      .json({
-        success: false,
-        message: error.message,
-      });
+    res.status(err.message === "URL not found" ? 404 : 400).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// get the stat of Url
-const getUrlStats = async (req, res) => {
+// Redirect to original URL
+const redirectUrlController = async (req, res) => {
+  try {
+    const { shortCode } = req.params;
+    const originalUrl = await redirectUrl(shortCode);
+    res.redirect(originalUrl);
+  } catch (err) {
+    res.status(
+      err.message === "URL not found"
+        ? 404
+        : err.message === "URL has expired"
+        ? 401
+        : 500
+    ).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Get stats for a URL
+const getStatsController = async (req, res) => {
   try {
     const { shortCode } = req.params;
     const url = await getStats(shortCode);
@@ -60,16 +82,57 @@ const getUrlStats = async (req, res) => {
       success: true,
       data: {
         shortCode: url.shortCode,
-        orignalUrl: url.orignalUrl,
+        originalUrl: url.orignalUrl,
         createdAt: url.createdAt,
         clicks: url.clicks,
         expireAt: url.expiresAt,
       },
     });
   } catch (err) {
-    res.status(err.message==='URL not found' ?404 :500).json({
+    res.status(err.message === "URL not found" ? 404 : 400).json({
       success: false,
       message: err.message,
     });
   }
+};
+
+// Get top 10 most visited URLs
+const getTopUrlsController = async (req, res) => {
+  try {
+    const urls = await getTopUrls();
+    res.status(200).json({
+      success: true,
+      data: urls,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Clean up expired URLs
+const cleanUpExpiredUrlController = async (req, res) => {
+  try {
+    const deletedCount = await cleanUpExpiredUrl();
+    res.status(200).json({
+      success: true,
+      message: `${deletedCount} expired URLs deleted.`,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+module.exports = {
+  shortenUrlController,
+  getUrlController,
+  redirectUrlController,
+  getStatsController,
+  getTopUrlsController,
+  cleanUpExpiredUrlController,
 };

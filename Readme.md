@@ -1,127 +1,276 @@
 # URL Shortener System Design
 
-This project is a backend implementation of a URL Shortener system. It includes utilities for generating short codes, validating URLs, and other essential components.
+This project is a backend implementation of a URL Shortener system built with Node.js, Express, and MongoDB. It includes utilities for generating short codes, validating URLs, and comprehensive API endpoints for URL management.
 
 ---
 
 ## Table of Contents
 
-1. [createShortCodeGenerator](#createshortcodegenerator)
-2. [URLValidator](#urlvalidator)
-3. [Use Cases](#use-cases)
-4. [License](#license)
+1. [Features](#features)
+2. [Tech Stack](#tech-stack)
+3. [Installation](#installation)
+4. [Environment Variables](#environment-variables)
+5. [API Endpoints](#api-endpoints)
+6. [Components](#components)
+7. [Usage Examples](#usage-examples)
+8. [Testing](#testing)
+9. [Project Structure](#project-structure)
+10. [License](#license)
 
 ---
 
-## createShortCodeGenerator
+## Features
 
-The `createShortCodeGenerator` function is a utility for generating random short codes, typically used for creating unique identifiers such as URL shortener codes. It allows you to specify the length of the generated short code and ensures randomness by using a predefined set of characters.
+- ✅ URL shortening with custom expiration dates
+- ✅ URL validation and sanitization
+- ✅ Click tracking and analytics
+- ✅ MongoDB for persistent storage
+- ✅ Top URLs ranking system
+- ✅ Automatic cleanup of expired URLs
+- ✅ RESTful API design
+- ✅ Collision detection for unique short codes
 
-### File Location
+---
 
-This function is implemented in the file:  
-[components/ShortCodeGenerator.js](components/ShortCodeGenerator.js)
+## Tech Stack
 
-### Function Signature
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB
+- **Validation**: Custom URL validator
+- **Dev Tools**: Nodemon
 
-```javascript
-const createShortCodeGenerator = (length = 7) => { ... };
-```
+---
 
-### Parameters
+## Installation
 
-- **`length`** _(optional)_:
-  - **Type**: `Number`
-  - **Default**: `7`
-  - **Description**: Specifies the length of the short code to be generated. If not provided, the default length is 7 characters.
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd "URL SHORTNER(SYSTEM DESIGN)"
+   ```
 
-### Returns
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-The function returns an object with the following method:
+3. **Start MongoDB:**
+   ```bash
+   mongod
+   ```
 
-#### `generate`
+4. **Run the application:**
+   ```bash
+   # Development mode
+   npm run dev
+   
+   # Production mode
+   npm start
+   ```
 
-- **Type**: `Function`
-- **Description**: Generates a random short code of the specified length using alphanumeric characters.
+---
 
-#### Example Usage:
+## Environment Variables
 
-```javascript
-const createShortCodeGenerator = require("./components/ShortCodeGenerator");
+Create a `.env` file in the root directory:
 
-const shortCodeGenerator = createShortCodeGenerator(8); // Create a generator for 8-character codes
-const shortCode = shortCodeGenerator.generate(); // Generate a random short code
-console.log(shortCode); // Example output: "A1bC2dE3"
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/urlshortner
 ```
 
 ---
 
-## URLValidator
+## API Endpoints
 
-The `URLValidator` module provides a utility for validating URLs. It ensures that the input is a valid URL and checks whether it starts with `http://` or `https://`.
+### Base URL: `http://localhost:3000`
 
-### File Location
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/shorten` | Shorten a new URL |
+| `GET` | `/url/:shortCode` | Get URL details by short code |
+| `GET` | `/redirect/:shortCode` | Redirect to original URL |
+| `GET` | `/stats/:shortCode` | Get URL statistics |
+| `GET` | `/top` | Get top 10 most visited URLs |
+| `DELETE` | `/cleanup` | Clean up expired URLs |
 
-This module is implemented in the file:  
-[components/URLValidator.js](components/URLValidator.js)
+### API Examples
 
-### Functionality
+#### Shorten URL
+```http
+POST /shorten
+Content-Type: application/json
 
-The `URLValidator` object exposes a single method:
+{
+  "url": "https://example.com",
+  "expirationDays": 30
+}
+```
 
-#### `validate`
+#### Get URL Stats
+```http
+GET /stats/abc123
+```
 
-- **Type**: `Function`
-- **Description**: Validates a given URL string.
+#### Redirect to Original URL
+```http
+GET /redirect/abc123
+```
 
-#### Parameters
+---
 
-- **`url`**:
-  - **Type**: `String`
-  - **Description**: The URL string to validate.
+## Components
 
-#### Returns
+### ShortCodeGenerator
 
-The method returns an object with the following structure:
+Generates random alphanumeric short codes for URLs.
 
-- **`valid`**: `Boolean` - Indicates whether the URL is valid.
-- **`message`**: `String` - A message describing the validation result.
+**File**: `components/ShortCodeGenerator.js`
 
-#### Example Usage:
+```javascript
+const generate = require("./components/ShortCodeGenerator");
+const shortCode = generate(); // Returns: "aB3dE7F"
+```
+
+**Features**:
+- 7-character length
+- Uses alphanumeric characters (A-Z, a-z, 0-9)
+- Collision detection and retry mechanism
+
+### URLValidator
+
+Validates URL format and protocol requirements.
+
+**File**: `components/URLValidator.js`
 
 ```javascript
 const URLValidator = require("./components/URLValidator");
 
 const result = URLValidator.validate("https://example.com");
-console.log(result); // { valid: true, message: "Valid URL" }
+// Returns: { valid: true, message: "Valid URL" }
+```
 
-const invalidResult = URLValidator.validate("example.com");
-console.log(invalidResult); // { valid: false, message: "URL must start with http or https" }
+**Validation Rules**:
+- Must be a string
+- Must start with `http://` or `https://`
+- Must be a valid URL format
+
+---
+
+## Usage Examples
+
+### Basic URL Shortening
+
+```javascript
+// POST /shorten
+{
+  "url": "https://www.google.com",
+  "expirationDays": 7
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "originalUrl": "https://www.google.com",
+    "shortUrl": "http://localhost:3000/aB3dE7F",
+    "shortCode": "aB3dE7F",
+    "expireAt": "2024-09-11T10:30:00.000Z"
+  }
+}
+```
+
+### Getting URL Statistics
+
+```javascript
+// GET /stats/aB3dE7F
+{
+  "success": true,
+  "data": {
+    "shortCode": "aB3dE7F",
+    "originalUrl": "https://www.google.com",
+    "createdAt": "2024-09-04T10:30:00.000Z",
+    "clicks": 15,
+    "expireAt": "2024-09-11T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+## Testing
+
+### Using Postman
+
+1. **Import the collection** with these endpoints:
+   - `POST http://localhost:3000/shorten`
+   - `GET http://localhost:3000/redirect/:shortCode`
+   - `GET http://localhost:3000/stats/:shortCode`
+   - `GET http://localhost:3000/top`
+   - `DELETE http://localhost:3000/cleanup`
+
+2. **Test the flow**:
+   - Create a short URL
+   - Use the returned short code to test redirect
+   - Check stats to see click count
+
+### Running Tests
+
+```bash
+npm test
+```
+
+---
+
+## Project Structure
+
+```
+URL SHORTNER(SYSTEM DESIGN)/
+├── components/
+│   ├── ShortCodeGenerator.js
+│   └── URLValidator.js
+├── controllers/
+│   └── UrlController.js
+├── models/
+│   └── urlModel.js
+├── routes/
+│   └── urlRoutes.js
+├── services/
+│   └── urlServices.js
+├── server.js
+├── package.json
+└── README.md
 ```
 
 ---
 
 ## Use Cases
 
-- **`createShortCodeGenerator`**:
-  - Generating unique short codes for URL shortening services.
-  - Creating random identifiers for database entries.
-  - Generating temporary access codes or tokens.
-
-- **`URLValidator`**:
-  - Validating user-provided URLs before storing them in the database.
-  - Ensuring that URLs conform to the required format for further processing.
+- **URL Shortening Services**: Create compact URLs for sharing
+- **Link Tracking**: Monitor click analytics and user engagement
+- **Marketing Campaigns**: Track campaign performance through shortened links
+- **Social Media**: Share links efficiently with character limits
+- **QR Code Generation**: Create scannable codes for physical media
 
 ---
 
-## Notes
+## Contributing
 
-- The randomness of the short codes generated by `createShortCodeGenerator` depends on the `Math.random()` function, which may not be suitable for cryptographic purposes.
-- Ensure that the generated short codes are checked for uniqueness in your application if required.
-- The `URLValidator` uses the JavaScript `URL` constructor for validation, which is reliable for most use cases.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
 ---
 
 ## License
 
-This project is part of the `url-shortner-system-design` and is licensed under the ISC license.
+This project is licensed under the ISC License.
+
+---
+
+## Author
+
+**Shubham**  
+Backend Developer specializing in system design and scalable applications.

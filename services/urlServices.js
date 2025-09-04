@@ -2,29 +2,26 @@ const Url = require("../models/urlModel.js");
 const generate = require("../components/ShortCodeGenerator.js");
 const URLValidator = require("../components/URLValidator.js");
 
-const generator = new createShortCodeGenerator(7);
-const validator = new URLValidator();
-
 const shortenUrl = async (orignalUrl, expirationDays = null) => {
   // validating the given Url
-  const validionResult = validator.validate(orignalUrl);
+  const validionResult = URLValidator.validate(orignalUrl);
   if (!validionResult.valid) {
     throw new Error(validionResult.message);
   }
 
   //calculate expiration date if provided
   let expiresAt = null;
-  if (expirationDays && !NaN(expirationDays) && expirationDays > 0) {
+  if (expirationDays && !isNaN(expirationDays) && expirationDays > 0) {
     expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + parseInt(expirationDays));
   }
 
-  //gernerating unique short url
-  let shortCode = generate(orignalUrl);
+  //generating unique short url
+  let shortCode = generate(); // Call generate function directly
   let existing = await Url.findOne({ shortCode: shortCode });
   let attempts = 0;
   while (existing && attempts < 10) {
-    shortCode = generate(orignalUrl);
+    shortCode = generate(); // Call generate function directly
     existing = await Url.findOne({ shortCode: shortCode });
     attempts++;
   }
@@ -32,8 +29,8 @@ const shortenUrl = async (orignalUrl, expirationDays = null) => {
     throw new Error("Could not generate unique short code");
   }
 
-  //Creating The New Url Oject In The DB
-  const newUrl = Url.create({ shortCode, orignalUrl, expiresAt });
+  //Creating The New Url Object In The DB
+  const newUrl = new Url({ shortCode, orignalUrl, expiresAt });
   await newUrl.save();
   return newUrl;
 };
@@ -73,13 +70,14 @@ const getTopUrls = async () => {
 };
 
 //cleaning the expired Url
-const cleanUpExpiredUrl = async (params) => {
+const cleanUpExpiredUrl = async () => {
   const result = await Url.deleteMany({
     expiresAt: { $lt: new Date(), $ne: null },
   });
   return result.deletedCount;
 };
-module.export = {
+
+module.exports = {
   shortenUrl,
   getUrl,
   redirectUrl,
